@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--suppress HtmlUnknownTarget -->
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=997, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+
+    <title>SignalR Test</title>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script
+			  src="https://code.jquery.com/jquery-3.7.1.min.js"
+			  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+			  crossorigin="anonymous"></script>
+    <script>
+        (() => {
+            const write = mesage => {
+                console.log(mesage)
+                $("#root").append($("<p>" + mesage + "</p>"));
+            };
+            write("Hello world!");
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/hub")
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            connection.on("MessageX", message => write("Received: " + message));
+            connection.onclose(async () => {
+                write("Connection closed!");
+            });
+            connection.onreconnected(async () => {
+                write("Reconnected!");
+            });
+            connection.onreconnecting(async () => {
+                write("Reconnecting...");
+            });
+            async function start() {
+                try {
+                    await connection.start();
+                    write("SignalR Connected.");
+                } catch (err) {
+                    write(err);
+                    setTimeout(start, 5000);
+                }
+            };
+
+            start();
+        })();
+    </script>
+</body>
+
+</html>
